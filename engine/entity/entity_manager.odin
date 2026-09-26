@@ -11,12 +11,14 @@ next_entity_id : d.Entity = 0
 
 start_components : [dynamic]proc()
 update_components : [dynamic]proc()
+late_update_components : [dynamic]proc()
 fixed_update_components : [dynamic]proc()
 terminate_components : [dynamic]proc()
 
 initialize_components ::proc(){
     append(&start_components, transform.start)
     append(&update_components, transform.update)
+    append(&late_update_components, transform.late_update)
     append(&fixed_update_components, transform.fixed_update)
     append(&terminate_components, transform.terminate)
 
@@ -54,7 +56,12 @@ run_update_components :: proc(){
     for proce in update_components{
         proce()
     }
+    for proce in late_update_components{
+        proce()
+    }
 }
+
+
 
 run_fixed_update_components :: proc(){
     for proce in fixed_update_components{

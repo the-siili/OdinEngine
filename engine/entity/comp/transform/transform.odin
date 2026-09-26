@@ -6,7 +6,6 @@ import d "../../../definition"
 import m "core:math"
 import mling "core:math/linalg"
 
-
 Transform :: struct{
     global_position : [3]f32,
     global_rotation : quaternion128,
@@ -36,22 +35,58 @@ start :: proc() {
 }
 update :: proc() {
     
+    // for entity in transforms{
+    //     if transforms[entity].parent == -1{
+    //         continue
+    //     }
+    //     parent := transforms[entity].parent
+    //     child_pos := transforms[entity].local_position
+    //     parent_pos := transforms[parent].global_position
+    //     child_rot := transforms[entity].local_rotation
+    //     parent_rot := transforms[parent].global_rotation
+
+    //     rotated_pos := mling.quaternion128_mul_vector3(parent_rot, child_pos)
+    //     transforms[entity].global_position = parent_pos + rotated_pos
+    //     transforms[entity].global_rotation = parent_rot * child_rot
+    // }
+    
+}
+
+late_update :: proc() {
+    stack :[dynamic]d.Entity = {}
+
+
     for entity in transforms{
         if transforms[entity].parent == -1{
-            continue
+            append(&stack, entity)
         }
-        parent := transforms[entity].parent
-        child_pos := transforms[entity].local_position
-        parent_pos := transforms[parent].global_position
-        child_rot := transforms[entity].local_rotation
-        parent_rot := transforms[parent].global_rotation
+    }
+    for entity in stack{
 
-        rotated_pos := mling.quaternion128_mul_vector3(parent_rot, child_pos)
-        transforms[entity].global_position = parent_pos + rotated_pos
-        transforms[entity].global_rotation = parent_rot * child_rot
+        if transforms[entity].parent != -1{
+            parent := transforms[entity].parent
+            child_pos := transforms[entity].local_position
+            parent_pos := transforms[parent].global_position
+            child_rot := transforms[entity].local_rotation
+            parent_rot := transforms[parent].global_rotation
+
+            rotated_pos := mling.quaternion128_mul_vector3(parent_rot, child_pos)
+            transforms[entity].global_position = parent_pos + rotated_pos
+            transforms[entity].global_rotation = parent_rot * child_rot
+        }
+        else{
+            transforms[entity].global_position = transforms[entity].local_position
+            transforms[entity].global_rotation = transforms[entity].local_rotation
+        }
+
+        for child in transforms[entity].children{
+            append(&stack, child)
+        }
+        
     }
     
 }
+
 fixed_update :: proc() {
 }
 terminate :: proc() {

@@ -36,6 +36,7 @@ import trans "../engine/entity/comp/transform"
 import static_mesh "../engine/entity/comp/static_mesh"
 import script "../engine/entity/comp/script"
 import camera "../engine/entity/comp/camera"
+
 CurrentWindow : glfw.WindowHandle
 
 main :: proc() {
@@ -153,21 +154,21 @@ player_update ::proc(entity:d.Entity, data:rawptr){
         [3]f32{0, 0, -1},
     )
     if w.keyboard["W"]{
-        trans.addPosition(entity, forward*0.1)
+        trans.addLocalPosition(entity, forward*0.1)
     }
     
     if w.keyboard["S"]{
-        trans.addPosition(entity, -forward*0.1)
+        trans.addLocalPosition(entity, -forward*0.1)
     }
     
     if w.keyboard["A"]{
-        trans.addPosition(entity, -right*0.1)
+        trans.addLocalPosition(entity, -right*0.1)
     }
     if w.keyboard["D"]{
-        trans.addPosition(entity, right*0.1)
+        trans.addLocalPosition(entity, right*0.1)
     }
 
-    trans.addRotation(entity, mlin.quaternion_angle_axis_f32(-f32(w.cursor_difference.x)/1000, {0, 1, 0}))
+    trans.addLocalRotation(entity, mlin.quaternion_angle_axis_f32(-f32(w.cursor_difference.x)/1000, {0, 1, 0}))
     trans.addLocalRotation(player_data.PlayerCamera, mlin.quaternion_angle_axis_f32(-f32(w.cursor_difference.y)/1000, {1, 0, 0}))
 
     fmt.println(trans.getRotation(entity))
