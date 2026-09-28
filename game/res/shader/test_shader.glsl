@@ -18,3 +18,25 @@ void main() {
     uv = aUv.xy;
     pos = vec3(model_mat * vec4(aPos, 1.0));
 }
+
+--
+#version 330 core
+
+in vec2 uv;
+in vec3 pos;
+out vec4 FragColor;
+
+uniform sampler2D texture0;
+
+uniform vec3 loc;
+uniform vec3 camera_loc;
+void main() {
+
+        vec4 col = texture(texture0, uv);
+        FragColor = vec4(col.xyz, 1.0);
+
+        //FragColor = vec4(0, 1.0, 0,  1.0);
+
+}
+
+

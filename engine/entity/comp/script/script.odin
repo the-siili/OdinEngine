@@ -42,9 +42,8 @@ terminate :: proc() {
     for entity in scripts{
         scripts[entity].terminate(entity, scripts[entity].data)
         sc := scripts[entity]
-        free(sc.data)
-        free(sc)
-        delete_key(&scripts, entity)
+        mem_free(sc.data)
+        mem_free(sc)
     }
 
     clear(&scripts)

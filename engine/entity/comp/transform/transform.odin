@@ -4,7 +4,9 @@ package transform
 import "core:fmt"
 import d "../../../definition"
 import m "core:math"
-import mling "core:math/linalg"
+import mlin "core:math/linalg"
+import de "../../../debugger"
+
 
 Transform :: struct{
     global_position : [3]f32,
@@ -25,15 +27,8 @@ transforms : map[d.Entity]^Transform = {}
 
 start :: proc() {
     
-    for entity in transforms{
-        entity_pos := transforms[entity].global_position
-        for child in transforms[entity].children{
-            child_local_pos := transforms[child].local_position
-            transforms[child].global_position = [3]f32{entity_pos.x+child_local_pos.x, entity_pos.y+child_local_pos.y, entity_pos.z+child_local_pos.z,}
-        }
-    }
 }
-update :: proc() {
+late_update :: proc() {
     
     // for entity in transforms{
     //     if transforms[entity].parent == -1{
@@ -45,22 +40,22 @@ update :: proc() {
     //     child_rot := transforms[entity].local_rotation
     //     parent_rot := transforms[parent].global_rotation
 
-    //     rotated_pos := mling.quaternion128_mul_vector3(parent_rot, child_pos)
+    //     rotated_pos := mlin.quaternion128_mul_vector3(parent_rot, child_pos)
     //     transforms[entity].global_position = parent_pos + rotated_pos
     //     transforms[entity].global_rotation = parent_rot * child_rot
     // }
     
 }
 
-late_update :: proc() {
-    stack :[dynamic]d.Entity = {}
+stack :[dynamic]d.Entity = {}
 
-
+update :: proc() {
     for entity in transforms{
         if transforms[entity].parent == -1{
             append(&stack, entity)
         }
     }
+  
     for entity in stack{
 
         if transforms[entity].parent != -1{
@@ -70,13 +65,18 @@ late_update :: proc() {
             child_rot := transforms[entity].local_rotation
             parent_rot := transforms[parent].global_rotation
 
-            rotated_pos := mling.quaternion128_mul_vector3(parent_rot, child_pos)
-            transforms[entity].global_position = parent_pos + rotated_pos
+            transforms[entity].global_scale =  transforms[entity].local_scale * transforms[parent].global_scale
+
+            rotated_pos := mlin.quaternion128_mul_vector3(parent_rot, child_pos)
+            transforms[entity].global_position = (parent_pos + rotated_pos) * transforms[parent].global_scale
             transforms[entity].global_rotation = parent_rot * child_rot
+
+            
         }
         else{
             transforms[entity].global_position = transforms[entity].local_position
             transforms[entity].global_rotation = transforms[entity].local_rotation
+            transforms[entity].global_scale =  transforms[entity].local_scale
         }
 
         for child in transforms[entity].children{
@@ -85,20 +85,22 @@ late_update :: proc() {
         
     }
     
+
+     clear(&stack)
 }
 
 fixed_update :: proc() {
 }
 terminate :: proc() {
     for entity in transforms{
+        delete_dynamic_array(transforms[entity].children)
         free(transforms[entity])
-        delete_key(&transforms, entity)
     }
     clear(&transforms)
 }
 
 
-add :: proc(entity : d.Entity) {
+add :: proc(entity : d.Entity, parent : d.Entity = -1) {
     transform := new(Transform)
     
     transform.global_position={0, 0, 0}
@@ -108,7 +110,11 @@ add :: proc(entity : d.Entity) {
     transform.local_rotation=quaternion(x=0, y=0, z=0, w=1)
     transform.local_scale={1, 1, 1}
     transform.children={}
-    transform.parent=-1
+    transform.parent=parent
+
+    if parent != -1{
+        append(&transforms[parent].children, entity)
+    }
 
     transforms[entity] = transform
 }
@@ -119,64 +125,73 @@ setParent :: proc(entity : d.Entity, parent : d.Entity){
 }
 
 
-getPosition :: proc(entity : d.Entity) -> [3]f32{
+getGlobalPosition :: proc(entity : d.Entity) -> [3]f32{
 
     return transforms[entity].global_position
 }
-setPosition :: proc(entity : d.Entity, new_position : [3]f32){
 
-    transforms[entity].global_position = new_position
-}
-
-addPosition :: proc(entity : d.Entity, added_position : [3]f32){
-
-    transforms[entity].global_position += added_position
-}
-
-getLocalPosition :: proc(entity : d.Entity) -> [3]f32{
+getPosition :: proc(entity : d.Entity) -> [3]f32{
 
     return transforms[entity].local_position
 }
-setLocalPosition :: proc(entity : d.Entity, new_position : [3]f32){
+setPosition :: proc(entity : d.Entity, new_position : [3]f32){
 
     transforms[entity].local_position = new_position
 }
 
-addLocalPosition :: proc(entity : d.Entity, added_position : [3]f32){
+addPosition :: proc(entity : d.Entity, added_position : [3]f32){
 
     transforms[entity].local_position += added_position
 }
 
-getRotation :: proc(entity : d.Entity) -> quaternion128{
+getGlobalRotation :: proc(entity : d.Entity) -> quaternion128{
 
     return transforms[entity].global_rotation
 }
 
+getGlobalRotationEuler :: proc(entity : d.Entity) -> [3]f32{
+    rx, ry, rz := mlin.euler_angles_from_quaternion_f32(transforms[entity].global_rotation, mlin.Euler_Angle_Order.XYZ)
+    return  [3]f32{rx, ry, rz}
+}
+
+getRotation :: proc(entity : d.Entity) -> quaternion128{
+
+    return transforms[entity].local_rotation
+}
 getRotationEuler :: proc(entity : d.Entity) -> [3]f32{
-    rx, ry, rz := mling.euler_angles_from_quaternion_f32(transforms[entity].global_rotation, mling.Euler_Angle_Order.XYZ)
+    rx, ry, rz := mlin.euler_angles_from_quaternion_f32(transforms[entity].local_rotation, mlin.Euler_Angle_Order.XYZ)
     return  [3]f32{rx, ry, rz}
 }
 
 setRotation :: proc(entity : d.Entity, new_rotation : quaternion128){
 
-    transforms[entity].global_rotation = new_rotation
-}
-addRotation :: proc(entity : d.Entity, added_rotation : quaternion128){
-
-    transforms[entity].global_rotation = transforms[entity].global_rotation * added_rotation
-}
-
-getLocalRotation :: proc(entity : d.Entity) -> quaternion128{
-
-    return transforms[entity].local_rotation
-}
-setLocalRotation :: proc(entity : d.Entity, new_rotation : quaternion128){
-
     transforms[entity].local_rotation = new_rotation
 }
-addLocalRotation :: proc(entity : d.Entity, added_rotation : quaternion128){
+addRotation :: proc(entity : d.Entity, added_rotation : quaternion128){
 
     transforms[entity].local_rotation = transforms[entity].local_rotation * added_rotation
 }
 
+rotateAround :: proc(entity : d.Entity, axis:[3]f32, amount:f32){
 
+    transforms[entity].local_rotation = transforms[entity].local_rotation * mlin.quaternion_angle_axis_f32(amount, axis)
+}
+
+getGlobalScale :: proc(entity : d.Entity) -> [3]f32{
+
+    return transforms[entity].global_scale
+}
+
+getScale :: proc(entity : d.Entity) -> [3]f32{
+
+    return transforms[entity].local_scale
+}
+setScale :: proc(entity : d.Entity, new_scale : [3]f32){
+
+    transforms[entity].local_scale = new_scale
+}
+
+addScale :: proc(entity : d.Entity, added_scale : [3]f32){
+
+    transforms[entity].local_scale += added_scale
+}

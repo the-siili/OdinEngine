@@ -33,11 +33,15 @@ load_obj ::proc(obj_string: string) -> (vertices:[]f32, indices : []u32){
     normal_array : [dynamic][3]f32 = {}
     uv_array : [dynamic][2]f32 = {}
     index_array : [dynamic][3]u32 = {}
-
+    defer delete_dynamic_array(vertice_array)
+    defer delete_dynamic_array(normal_array)
+    defer delete_dynamic_array(uv_array)
+    defer delete_dynamic_array(index_array)
     lines := strings.split_lines(obj_string)
-
+    defer delete_slice(lines)
     for line in lines{
         items := strings.split(line, " ")
+        defer delete_slice(items)
         if items[0] == "v"{
             x, _ := strconv.parse_f32(items[1])
             y, _ := strconv.parse_f32(items[2])
@@ -61,7 +65,7 @@ load_obj ::proc(obj_string: string) -> (vertices:[]f32, indices : []u32){
         else if items[0] == "f"{
             for item in items[1:]{
                 inds := strings.split(item, "/")
-                fmt.printfln(inds[1])
+                defer delete_slice(inds)
                 vert_index, _ := strconv.parse_int(inds[0])
                 uv_index, _ := strconv.parse_int(inds[1])
                 normal_index, _ := strconv.parse_int(inds[2])
@@ -72,7 +76,7 @@ load_obj ::proc(obj_string: string) -> (vertices:[]f32, indices : []u32){
     }
 
     final_v : [dynamic][8]f32 ={}
-
+    defer delete_dynamic_array(final_v)
     for row in vertice_array{
         append(&final_v, [8]f32{row.x, row.y, row.z, 0, 0, 0, 0, 0})
     }
@@ -90,12 +94,11 @@ load_obj ::proc(obj_string: string) -> (vertices:[]f32, indices : []u32){
     }
     return_v : [dynamic]f32 = {}
     return_ia :[]u32 = final_ia[:]
-
     for row in final_v{
         for item in row{
             append(&return_v, item)
         }
     }
-
+    final_return_v := return_v[:]
     return return_v[:], return_ia
 }

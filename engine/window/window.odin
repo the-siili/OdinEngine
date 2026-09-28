@@ -68,6 +68,7 @@ intialize_window :: proc(size : [2]i32) -> glfw.WindowHandle{
     return window
 }
 terminate_window :: proc(){
+    delete_map(keyboard)
     glfw.Terminate()
 }
 

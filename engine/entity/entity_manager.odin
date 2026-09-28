@@ -4,7 +4,7 @@ import static_mesh "comp/static_mesh"
 import script "comp/script"
 import camera "comp/camera"
 import d "../definition"
-
+import de "../debugger"
 next_entity_id : d.Entity = 0
 
 
@@ -34,6 +34,7 @@ initialize_components ::proc(){
 
     append(&start_components, camera.start)
     append(&update_components, camera.update)
+    append(&late_update_components, camera.late_update)
     append(&fixed_update_components, camera.fixed_update)
     append(&terminate_components, camera.terminate)
 
@@ -59,6 +60,7 @@ run_update_components :: proc(){
     for proce in late_update_components{
         proce()
     }
+    
 }
 
 
@@ -70,7 +72,17 @@ run_fixed_update_components :: proc(){
 }
 
 run_terminate_components :: proc(){
+    
     for proce in terminate_components{
         proce()
     }
+}
+
+clean_entity_manager ::proc(){
+
+    delete_dynamic_array(start_components)
+    delete_dynamic_array(update_components)
+    delete_dynamic_array(late_update_components)
+    delete_dynamic_array(fixed_update_components)
+    delete_dynamic_array(terminate_components)
 }

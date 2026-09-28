@@ -22,15 +22,19 @@ cameras : map[d.Entity]^Camera = {}
 start :: proc() {
 }
 update :: proc() {
-    ge.camera_location = trans.getPosition(CurrentCamera)
-    ge.camera_rotation = trans.getRotationEuler(CurrentCamera)
+
 }
+
+late_update :: proc(){
+    ge.camera_location = trans.getGlobalPosition(CurrentCamera)
+    ge.camera_rotation = trans.getGlobalRotationEuler(CurrentCamera)
+}
+
 fixed_update :: proc() {
 }
 terminate :: proc() {
     for entity in cameras{
         free(cameras[entity])
-        delete_key(&cameras, entity)
     }
     clear(&cameras)
 }
