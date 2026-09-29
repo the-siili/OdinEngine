@@ -21,19 +21,24 @@ load_scene :: proc(name : string){
 }
 
 move_to_next_scene :: proc(){
+    de.prof_frame_part()
     //leak size 2532
     if next_scene == ""{
         return
     }
     
-    entity.run_terminate_components()
-    
-    ge.remove_all_render_objects()
-    
+    unload_current_scene()
     de.print_unfreed_data("before remove render ")
     scenes[next_scene]()
     de.print_unfreed_data("after remove render ")
     current_scene = next_scene
     next_scene = ""
     
+}
+
+unload_current_scene :: proc(){
+    entity.run_terminate_components()
+    
+    ge.remove_all_render_objects()
+    ge.unload_all_materials()
 }

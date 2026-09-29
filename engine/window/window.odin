@@ -1,24 +1,10 @@
-// An elementary program in Odin which creates a colored cube
-// which rotates over time.
-//
-// Created by Benjamin Thompson. Available at:
-// https://github.com/bg-thompson/OpenGL-Tutorials-In-Odin
-// Last updated: 2024.09.15
-//
-// To compile and run the program with optimizations, use the command
-//
-//     odin run Rotating-Cube -o:speed
-//
-// Created for educational purposes. Used verbatim, it is probably
-// unsuitable for production code.
-
 package window
 
 import    "vendor:glfw"
 import gl "vendor:OpenGL"
 import ge "../graphics"
 import    "base:runtime"
-
+import de "../debugger"
 
 window : glfw.WindowHandle
 
@@ -30,7 +16,7 @@ cursor_difference : [2]f64 = {0, 0}
 
 
 
-intialize_window :: proc(size : [2]i32) -> glfw.WindowHandle{
+initialize_window :: proc(size : [2]i32) -> glfw.WindowHandle{
 
     keyboard = make(map[string]bool)
 
@@ -70,6 +56,15 @@ intialize_window :: proc(size : [2]i32) -> glfw.WindowHandle{
 terminate_window :: proc(){
     delete_map(keyboard)
     glfw.Terminate()
+}
+
+read_input :: proc(){
+    de.prof_frame_part()
+    glfw.PollEvents()
+    update_mouse_position()
+}
+clear_input :: proc(){
+    reset_mouse_position()
 }
 
 update_mouse_position :: proc(){

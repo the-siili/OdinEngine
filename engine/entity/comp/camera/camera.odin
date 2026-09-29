@@ -6,7 +6,7 @@ import d "../../../definition"
 import ge "../../../graphics"
 import trans "../transform"
 import m "core:math"
-
+import de "../../../debugger"
 Camera :: struct{
     pos_offset: [3]f32,
     rot_offset: [3]f32,
@@ -21,11 +21,12 @@ cameras : map[d.Entity]^Camera = {}
 
 start :: proc() {
 }
-update :: proc() {
+update :: proc(delta_time : f64) {
 
 }
 
-late_update :: proc(){
+late_update :: proc(delta_time : f64){
+    de.prof_frame_part()
     ge.camera_location = trans.getGlobalPosition(CurrentCamera)
     ge.camera_rotation = trans.getGlobalRotationEuler(CurrentCamera)
 }

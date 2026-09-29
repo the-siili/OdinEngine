@@ -30,12 +30,18 @@ uniform sampler2D texture0;
 
 uniform vec3 loc;
 uniform vec3 camera_loc;
+uniform float uv_scale;
+
+float lighting_far = 50.0;
+float lighting_close = 10.0;
+
 void main() {
+        float dist = clamp(sqrt(pow(pos.x-camera_loc.x, 2)+pow(pos.y-camera_loc.y, 2)+pow(pos.z-camera_loc.z, 2)), lighting_close, lighting_far);
+        dist = 1-(dist - lighting_close) / (lighting_far - lighting_close);
+        vec4 col = texture(texture0, uv*uv_scale);
+        FragColor = vec4(col.xyz*dist, 1.0);
 
-        vec4 col = texture(texture0, uv);
-        FragColor = vec4(col.xyz, 1.0);
-
-        //FragColor = vec4(0, 1.0, 0,  1.0);
+        //FragColor = vec4(0, sin(uv.x), 0,  1.0);
 
 }
 

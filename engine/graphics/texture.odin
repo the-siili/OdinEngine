@@ -15,10 +15,10 @@ next_texture_index : d.TextureId = 0
 
 
 load_texture ::proc(texture_bytes : []u8, 
-    h_wrap_mode : i32 = TEXTURE_WRAP_MODE_REPEAT, 
-    v_wrap_mode : i32 = TEXTURE_WRAP_MODE_REPEAT,
-    min_filter :i32 = TEXTURE_FILTER_LINEAR,
-    mag_filter :i32 = TEXTURE_FILTER_LINEAR) -> d.TextureId{
+    h_wrap_mode : i32 = TEXTURE_WRAP_MODE_CLAMP_TO_EDGE, 
+    v_wrap_mode : i32 = TEXTURE_WRAP_MODE_CLAMP_TO_EDGE,
+    min_filter :i32 = TEXTURE_FILTER_NEAREST,
+    mag_filter :i32 = TEXTURE_FILTER_NEAREST) -> d.TextureId{
 
     image_ptr           :  ^image.Image
     err                 :  image.Error

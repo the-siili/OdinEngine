@@ -26,6 +26,9 @@ load_shader ::proc(shader_str:string) -> d.ShaderId{
     }
 
     shaders[next_shader_index] = shader
+    if next_shader_index not_in render_object_hierarchy{
+        render_object_hierarchy[next_shader_index] = {}
+    }
     defer next_shader_index += 1
     return next_shader_index
 }

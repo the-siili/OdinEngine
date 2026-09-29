@@ -7,22 +7,23 @@ import transform "../transform"
 import ge "../../../graphics"
 import mlin "core:math/linalg"
 import res "../../../resource"
-
+import de "../../../debugger"
 StaticMesh :: struct{
-    material : ^ge.Material,
+    material : d.MaterialId,
     render_object_id : d.RenderObjectId
 }
 
 
 
 static_meshes : map[d.Entity]^StaticMesh = {}
-
+update_stack : [dynamic]d.Entity
 
 
 start :: proc() {
 
 }
-update :: proc() {
+update :: proc(delta_time : f64) {
+    de.prof_frame_part()
     for entity in static_meshes{
         ge.set_render_object_position(static_meshes[entity].render_object_id, transform.getGlobalPosition(entity))
         rx, ry, rz := mlin.euler_angles_from_quaternion_f32(transform.getGlobalRotation(entity), mlin.Euler_Angle_Order.XYZ)
@@ -42,7 +43,7 @@ terminate :: proc() {
 }
 
 
-add :: proc(entity : d.Entity, mesh_name : string, mat : ^ge.Material) {
+add :: proc(entity : d.Entity, mesh_name : string, mat : d.MaterialId) {
     stat_mesh := new(StaticMesh)
     stat_mesh.material = mat
     stat_mesh.render_object_id =ge.create_render_object(res.get_mesh_id(mesh_name), mat, transform.getGlobalPosition(entity), transform.getGlobalRotationEuler(entity), transform.getGlobalScale(entity))

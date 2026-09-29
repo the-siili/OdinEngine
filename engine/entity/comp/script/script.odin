@@ -3,12 +3,12 @@ package script
 
 import "core:fmt"
 import d "../../../definition"
-
+import de "../../../debugger"
 
 
 Script :: struct {
     start: proc(entity: d.Entity, data: rawptr),
-    update: proc(entity: d.Entity, data: rawptr),
+    update: proc(entity: d.Entity, data: rawptr,delta_time : f64),
     fixed_update: proc(entity: d.Entity, data: rawptr),
     terminate: proc(entity: d.Entity, data: rawptr),
     data: rawptr
@@ -24,10 +24,10 @@ start :: proc() {
         scripts[entity].start(entity, scripts[entity].data)
     }
 }
-update :: proc() {
-
+update :: proc(delta_time : f64) {
+    de.prof_frame_part()
     for entity in scripts{
-        scripts[entity].update(entity, scripts[entity].data)
+        scripts[entity].update(entity, scripts[entity].data, delta_time)
     }
 
 }

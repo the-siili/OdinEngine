@@ -9,15 +9,18 @@ render_objects : map[d.RenderObjectId]^RenderObject
 next_render_object_index : d.RenderObjectId = 0
 
 @private
+render_object_hierarchy : map[d.ShaderId]map[d.MaterialId][dynamic]d.RenderObjectId
+
+@private
 RenderObject :: struct{
     mesh_index : i32,
     location : [3]f32,
     rotation : [3]f32,
     scale : [3]f32,
-    material : ^Material
+    material : d.MaterialId
 }
 
-create_render_object :: proc(mesh_index : i32, material : ^Material, position: [3]f32={0, 0, 0}, rotation : [3]f32={0, 0, 0}, scale : [3]f32 = {1, 1, 1}) -> d.RenderObjectId{
+create_render_object :: proc(mesh_index : i32, material : d.MaterialId, position: [3]f32={0, 0, 0}, rotation : [3]f32={0, 0, 0}, scale : [3]f32 = {1, 1, 1}) -> d.RenderObjectId{
 
     renderObject := new(RenderObject)
     renderObject.mesh_index = mesh_index
@@ -27,6 +30,12 @@ create_render_object :: proc(mesh_index : i32, material : ^Material, position: [
     renderObject.material = material
 
     render_objects[next_render_object_index] = renderObject
+    shader_hierarchy := render_object_hierarchy[materials[material].shader]
+
+    render_object_hierarchy_array := shader_hierarchy[material]
+    append(&render_object_hierarchy_array, next_render_object_index)
+
+    shader_hierarchy[material] = render_object_hierarchy_array
     defer next_render_object_index += 1
     return next_render_object_index
 }

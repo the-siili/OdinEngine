@@ -33,6 +33,7 @@ update_perspective_matrix ::proc(window : glfw.WindowHandle){
 
 render_screen :: proc(window : glfw.WindowHandle) {
 
+    de.prof_frame_part()
 
     view_mat := make_view_matrix(camera_location, camera_rotation)
 
@@ -44,36 +45,60 @@ render_screen :: proc(window : glfw.WindowHandle) {
     // Draw commands.
     gl.ClearColor(0.0, 0.0, 0.0, 1)
     gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-    b := false
-    for object_key in render_objects {
+    render_background(perspective_ptr, view_ptr)
+    for shader, material_list in render_object_hierarchy{
+        gl.UseProgram(shaders[shader] )
+        gl.UniformMatrix4fv(gl.GetUniformLocation(shaders[shader], "perspective_mat"), 1, gl.FALSE, perspective_ptr)
+        gl.UniformMatrix4fv(gl.GetUniformLocation(shaders[shader], "view_mat"), 1, gl.FALSE, view_ptr)
+                
+        for material, objects in material_list{
+            bind_material_uniforms(shaders[shader], materials[material]) 
+            for object_id in objects{
+                de.prof_frame_part()
+                object := render_objects[object_id]
+                model_mat := make_model_matrix(object.location, object.scale, object.rotation)
+                model_ptr : [^] f32 = &model_mat[0]
+                gl.UniformMatrix4fv(gl.GetUniformLocation(shaders[shader], "model_mat"), 1, gl.FALSE, model_ptr)
 
-        object := render_objects[object_key]
-        shader := shaders[object.material.shader]
-        if !b{
-             gl.UseProgram(shader )
+                gl.BindVertexArray(meshes[object.mesh_index].vao)
+                gl.DrawElements(
+                    gl.TRIANGLES,
+                    i32(meshes[object.mesh_index].index_count),
+                    gl.UNSIGNED_INT,
+                    nil,
+                )
+            }
+
         }
-        b = true
+    }
 
-        gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "perspective_mat"), 1, gl.FALSE, perspective_ptr)
-        gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "view_mat"), 1, gl.FALSE, view_ptr)
+    // for object_key in render_objects {
+
+    //     object := render_objects[object_key]
+    //     shader := shaders[materials[object.material].shader]
+
+    //     gl.UseProgram(shader )
+
+
+    //     gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "perspective_mat"), 1, gl.FALSE, perspective_ptr)
+    //     gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "view_mat"), 1, gl.FALSE, view_ptr)
         
 
-        model_mat := make_model_matrix(object.location, object.scale, object.rotation)
-        model_ptr : [^] f32 = &model_mat[0]
-        gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "model_mat"), 1, gl.FALSE, model_ptr)
-        bind_material_uniforms(shader, object.material) 
+    //     model_mat := make_model_matrix(object.location, object.scale, object.rotation)
+    //     model_ptr : [^] f32 = &model_mat[0]
+    //     gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "model_mat"), 1, gl.FALSE, model_ptr)
+    //     bind_material_uniforms(shader, materials[object.material]) 
 
-        // Set model matrix for this particular cube
-        gl.BindVertexArray(meshes[object.mesh_index].vao)
-        gl.DrawElements(
-            gl.TRIANGLES,
-            i32(meshes[object.mesh_index].index_count),
-            gl.UNSIGNED_INT,
-            nil,
-        )
-    }     
+    //     // Set model matrix for this particular cube
+    //     gl.BindVertexArray(meshes[object.mesh_index].vao)
+    //     gl.DrawElements(
+    //         gl.TRIANGLES,
+    //         i32(meshes[object.mesh_index].index_count),
+    //         gl.UNSIGNED_INT,
+    //         nil,
+    //     )
+    // }     
     
     glfw.SwapBuffers(window)
 
 }
-

@@ -22,13 +22,13 @@ Transform :: struct{
 
 
 transforms : map[d.Entity]^Transform = {}
-
+update_stack : [dynamic]d.Entity
 
 
 start :: proc() {
     
 }
-late_update :: proc() {
+late_update :: proc(delta_time : f64) {
     
     // for entity in transforms{
     //     if transforms[entity].parent == -1{
@@ -49,12 +49,14 @@ late_update :: proc() {
 
 stack :[dynamic]d.Entity = {}
 
-update :: proc() {
-    for entity in transforms{
+update :: proc(delta_time : f64) {
+    de.prof_frame_part()
+    for entity in update_stack{
         if transforms[entity].parent == -1{
             append(&stack, entity)
         }
     }
+    clear(&update_stack)
   
     for entity in stack{
 
@@ -119,14 +121,24 @@ add :: proc(entity : d.Entity, parent : d.Entity = -1) {
     transforms[entity] = transform
 }
 
+@private
+add_to_update_stack :: proc(entity : d.Entity){
+    parent := entity
+    for parent != -1{
+        parent = transforms[parent].parent
+    }
+    append(&update_stack, entity)
+}
+
 setParent :: proc(entity : d.Entity, parent : d.Entity){
     transforms[entity].parent = parent
     append(&transforms[parent].children, entity)
+    add_to_update_stack(parent)
 }
 
 
-getGlobalPosition :: proc(entity : d.Entity) -> [3]f32{
 
+getGlobalPosition :: proc(entity : d.Entity) -> [3]f32{
     return transforms[entity].global_position
 }
 
@@ -135,17 +147,16 @@ getPosition :: proc(entity : d.Entity) -> [3]f32{
     return transforms[entity].local_position
 }
 setPosition :: proc(entity : d.Entity, new_position : [3]f32){
-
+    add_to_update_stack(entity)
     transforms[entity].local_position = new_position
 }
 
 addPosition :: proc(entity : d.Entity, added_position : [3]f32){
-
+    add_to_update_stack(entity)
     transforms[entity].local_position += added_position
 }
 
 getGlobalRotation :: proc(entity : d.Entity) -> quaternion128{
-
     return transforms[entity].global_rotation
 }
 
@@ -164,16 +175,16 @@ getRotationEuler :: proc(entity : d.Entity) -> [3]f32{
 }
 
 setRotation :: proc(entity : d.Entity, new_rotation : quaternion128){
-
+    add_to_update_stack(entity)
     transforms[entity].local_rotation = new_rotation
 }
 addRotation :: proc(entity : d.Entity, added_rotation : quaternion128){
-
+    add_to_update_stack(entity)
     transforms[entity].local_rotation = transforms[entity].local_rotation * added_rotation
 }
 
 rotateAround :: proc(entity : d.Entity, axis:[3]f32, amount:f32){
-
+    add_to_update_stack(entity)
     transforms[entity].local_rotation = transforms[entity].local_rotation * mlin.quaternion_angle_axis_f32(amount, axis)
 }
 
@@ -187,11 +198,11 @@ getScale :: proc(entity : d.Entity) -> [3]f32{
     return transforms[entity].local_scale
 }
 setScale :: proc(entity : d.Entity, new_scale : [3]f32){
-
+    add_to_update_stack(entity)
     transforms[entity].local_scale = new_scale
 }
 
 addScale :: proc(entity : d.Entity, added_scale : [3]f32){
-
+    add_to_update_stack(entity)
     transforms[entity].local_scale += added_scale
 }

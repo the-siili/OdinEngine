@@ -1,16 +1,3 @@
-// An elementary program in Odin which creates a colored cube
-// which rotates over time.
-//
-// Created by Benjamin Thompson. Available at:
-// https://github.com/bg-thompson/OpenGL-Tutorials-In-Odin
-// Last updated: 2024.09.15
-//
-// To compile and run the program with optimizations, use the command
-//
-//     odin run Rotating-Cube -o:speed
-//
-// Created for educational purposes. Used verbatim, it is probably
-// unsuitable for production code.
 #+feature dynamic-literals
 package engine
 
@@ -18,9 +5,9 @@ import  ge"graphics"
 import w "window"
 import    "vendor:glfw"
 import gl "vendor:OpenGL"
+import "core:time"
 import    "core:image"
 import  q "core:image/qoi"
-import    "core:time"
 import m  "core:math"
 import mrand  "core:math/rand"
 import    "core:fmt"
@@ -33,12 +20,15 @@ import entity "entity"
 
 CurrentWindow : glfw.WindowHandle
 
+delta_tick : time.Tick
+delta_time : f64
+
 launch :: proc(scene_name : string) {
 
     
-
+    delta_tick := time.tick_now()
     
-    CurrentWindow = w.intialize_window({1280, 800})
+    CurrentWindow = w.initialize_window({1280, 800})
 
     entity.initialize_components()
 
@@ -49,15 +39,23 @@ launch :: proc(scene_name : string) {
     defer entity.run_terminate_components()
 
     for !glfw.WindowShouldClose(CurrentWindow) {
+        delta_time = time.duration_milliseconds(time.tick_since(delta_tick))/1000.0
+        delta_tick = time.tick_now()
+        de.prof_frame()
        // de.print_unfreed_data(" before frame")
-        glfw.PollEvents()
-        w.update_mouse_position()
-        defer w.reset_mouse_position()
-        entity.run_update_components()
+       
+        w.read_input()
+        defer w.clear_input()
+        entity.run_update_components(delta_time)
         ge.render_screen(CurrentWindow)
         scene.move_to_next_scene()
         //de.print_unfreed_data(" after frame")
     }
     ge.remove_all_render_objects()
     //entity.clean_entity_manager()
+}
+
+quit :: proc(){
+    scene.unload_current_scene()
+    os.exit(0)
 }

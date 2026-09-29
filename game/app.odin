@@ -42,11 +42,12 @@ CurrentWindow : glfw.WindowHandle
 
 main :: proc() {
     context.allocator = de.initialize_tracker()
-    de.print_unfreed_data(" before all")
+    de.prof_init()
+	defer de.prof_deinit()
+
+
     scene.add_scene("test", test_scene)
-    scene.add_scene("test_scene1", test_scene1)
     engine.launch("test")
-    de.print_unfreed_data(" after all")
     de.terminate_tracker()
 }
 
@@ -54,38 +55,46 @@ main :: proc() {
 test_scene :: proc(){
     models : []string = {
         "res/model/anime_girl.obj",
-        "res/model/revolver.obj"
+        "res/model/revolver.obj",
+        "res/model/ground.obj"
     }
     res.load_obj_models(models)
-    textures :[]string = {
-        "res/texture/pyramid.png",
-        "res/texture/pyramid_blue.png",
-        "res/texture/revolver_diffuse.png"
+    textures :[]res.TextureInfo = {
+        {"res/texture/pyramid.png",ge.TEXTURE_WRAP_MODE_REPEAT, ge.TEXTURE_FILTER_LINEAR},
+        {"res/texture/pyramid_blue.png",ge.TEXTURE_WRAP_MODE_REPEAT, ge.TEXTURE_FILTER_LINEAR},
+        {"res/texture/revolver_diffuse.png",ge.TEXTURE_WRAP_MODE_REPEAT, ge.TEXTURE_FILTER_LINEAR},
+        {"res/texture/asphalt.png",ge.TEXTURE_WRAP_MODE_REPEAT, ge.TEXTURE_FILTER_LINEAR},
+        {"res/texture/bg.png",ge.TEXTURE_WRAP_MODE_CLAMP_TO_EDGE, ge.TEXTURE_FILTER_NEAREST}
     }
     res.load_textures(textures)
 
     shaders : []string = {
-        "res/shader/test_shader.glsl"
+        "res/shader/test_shader.glsl",
+        "res/shader/bg.glsl"
     }
     res.load_shaders(shaders)
     shader := res.get_shader_id("test_shader.glsl")
+
+    ge.create_background(res.get_texture_id("bg.png"), res.get_shader_id("bg.glsl"))
+
 
     mat := new(ge.Material)
         mat.shader = shader
         mat.uniforms = {
             "texture0"=ge.uniform(res.get_texture_id("pyramid_blue.png")),
-            "camera_loc"=ge.uniform(ge.camera_location)
+            "camera_loc"=ge.uniform(&ge.camera_location),
+            "uv_scale"=ge.uniform(1.0)
         }
-
-    for i in 0..<500{
+    matid := ge.load_material(mat)
+    for i in 0..<50{
         girl :d.Entity = entity.new_entity()
         trans.add(girl)
-        trans.setPosition(girl, {mrand.float32_range(-100, 100), 3, mrand.float32_range(-100, 100)})
+        trans.setScale(girl, {0.3, 0.3, 0.3})
+        trans.setPosition(girl, {mrand.float32_range(-10, 10), 2.2, mrand.float32_range(-10, 10)})
 
-        static_mesh.add(girl, "anime_girl.obj", mat)
+        static_mesh.add(girl, "anime_girl.obj", matid)
 
     }
-
 
 
 
@@ -107,71 +116,38 @@ test_scene :: proc(){
 
     rev :d.Entity = entity.new_entity()
     trans.add(rev, cam)
-    trans.setPosition(rev, {0.2, -0.2, -0.9})
-    trans.setScale(rev, {1, 1, 1})
+    trans.setPosition(rev, {0.2, -0.4, -0.9})
+    trans.setScale(rev, {0.5, 0.5, 0.5})
+
+
     rmat := new(ge.Material)
     rmat.shader = shader
     rmat.uniforms = {"texture0"=ge.uniform(res.get_texture_id("revolver_diffuse.png")),
-                    "camera_loc"=ge.uniform(ge.camera_location), 
-                    "loc"=ge.uniform(trans.getPosition(rev))}
-    static_mesh.add(rev, "revolver.obj", rmat)
+                    "camera_loc"=ge.uniform(&ge.camera_location),
+                    "uv_scale"=ge.uniform(1.0)}
+    rmatid := ge.load_material(rmat)
+
+    static_mesh.add(rev, "revolver.obj", rmatid)
 
     ps_data.Rev = rev
 
-    
+    gmat := new(ge.Material)
+    gmat.shader = shader
+    gmat.uniforms = {"texture0"=ge.uniform(res.get_texture_id("asphalt.png")),
+                    "camera_loc"=ge.uniform(&ge.camera_location),
+                    "uv_scale"=ge.uniform(500.0)}
+    gmatid := ge.load_material(gmat)
+    ground :d.Entity = entity.new_entity()
+    trans.add(ground)
+    trans.setScale(ground, {1000, 1, 1000})
+    static_mesh.add(ground, "ground.obj", gmatid)
+
 }
-
-test_scene1:: proc(){
-    models : []string = {
-        "res/model/revolver.obj"
-    }
-    res.load_obj_models(models)
-    textures :[]string = {
-       // "res/texture/pyramid_blue.png",
-        "res/texture/revolver_diffuse.png"
-    }
-    res.load_textures(textures)
-
-    shaders : []string = {
-        "res/shader/test_shader.glsl"
-    }
-    res.load_shaders(shaders)
-    shader := res.get_shader_id("test_shader.glsl")
-    
-
-    player :d.Entity = entity.new_entity()
-    trans.add(player )
-    trans.setPosition(player, {0, 0.0, 0})
-    //camera.setPosOffset(player, [3]f32{0, 1, 0})
-    playerScript := generate_player_script()
-    script.add(player, playerScript)
-
-    cam : d.Entity = entity.new_entity()
-    trans.add(cam, player)
-    camera.add(cam)
-    trans.setPosition(cam, {0, 1.7, 0})
-    ps_data := cast(^PlayerData)playerScript.data
-    ps_data.PlayerCamera = cam
-
-    rev :d.Entity = entity.new_entity()
-    trans.add(rev, cam)
-    trans.setPosition(rev, {0.2, -0.2, -0.9})
-    trans.setScale(rev, {1, 1, 1})
-    rmat := new(ge.Material)
-    rmat.shader = shader
-    rmat.uniforms = {"texture0"=ge.uniform(res.get_texture_id("revolver_diffuse.png")),
-                "camera_loc"=ge.uniform(ge.camera_location), 
-                "loc"=ge.uniform(trans.getPosition(rev))}
-    fmt.println(rmat)
-    static_mesh.add(rev, "revolver.obj", rmat)
-
-    ps_data.Rev = rev
-}
-
 
 PlayerData :: struct{
     PlayerCamera : d.Entity,
     Rev : d.Entity,
+    speed : f32
 }
 
 
@@ -182,7 +158,7 @@ generate_player_script ::proc() -> ^script.Script{
     playerData := new(PlayerData)
 
     playerData.PlayerCamera=-1
-
+    playerData.speed = 10
     playerBeh := new(script.Script)
     playerBeh.start=player_start
     playerBeh.update=player_update
@@ -201,8 +177,7 @@ player_start ::proc(entity:d.Entity, data:rawptr){
 
 }
 
-player_update ::proc(entity:d.Entity, data:rawptr){
-
+player_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
     player_data := cast(^PlayerData)data
     rotation := trans.getRotation(entity)
     
@@ -216,18 +191,18 @@ player_update ::proc(entity:d.Entity, data:rawptr){
         [3]f32{0, 0, -1},
     )
     if w.keyboard["W"]{
-        trans.addPosition(entity, forward*0.1)
+        trans.addPosition(entity, forward*player_data.speed*f32(delta_time))
     }
     
     if w.keyboard["S"]{
-        trans.addPosition(entity, -forward*0.1)
+        trans.addPosition(entity, -forward*player_data.speed*f32(delta_time))
     }
     
     if w.keyboard["A"]{
-        trans.addPosition(entity, -right*0.1)
+        trans.addPosition(entity, -right*player_data.speed*f32(delta_time))
     }
     if w.keyboard["D"]{
-        trans.addPosition(entity, right*0.1)
+        trans.addPosition(entity, right*player_data.speed*f32(delta_time))
     }
     if w.keyboard["DOWN"]{
         scene.load_scene("test")
@@ -235,15 +210,13 @@ player_update ::proc(entity:d.Entity, data:rawptr){
 
     trans.rotateAround(entity, {0, 1, 0},-f32(w.cursor_difference.x)/1000)
     trans.rotateAround(player_data.PlayerCamera, {1, 0, 0}, -f32(w.cursor_difference.y)/1000)
-    trans.rotateAround(player_data.Rev, {1, 0, 0}, 0.01)
-    trans.setScale(player_data.Rev, m.pow_f32(m.sin(trans.getRotationEuler(player_data.Rev).x), 2))
+    // trans.rotateAround(player_data.Rev, {1, 0, 0}, 0.01)
+    // trans.setScale(player_data.Rev, m.pow_f32(m.sin(trans.getRotationEuler(player_data.Rev).x), 2))
 }
 
 
 player_fixed_update ::proc(entity:d.Entity, data:rawptr){
-    if w.keyboard["W"]{
-        trans.setPosition(entity, trans.getPosition(entity) + [3]f32{0, 0, 0.1})
-    }
+
 }
 player_terminate ::proc(entity:d.Entity, data:rawptr){
 }

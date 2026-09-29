@@ -10,8 +10,8 @@ next_entity_id : d.Entity = 0
 
 
 start_components : [dynamic]proc()
-update_components : [dynamic]proc()
-late_update_components : [dynamic]proc()
+update_components : [dynamic]proc(delta_time : f64)
+late_update_components : [dynamic]proc(delta_time : f64)
 fixed_update_components : [dynamic]proc()
 terminate_components : [dynamic]proc()
 
@@ -53,12 +53,13 @@ run_start_components :: proc(){
     }
 }
 
-run_update_components :: proc(){
+run_update_components :: proc(delta_time : f64){
+    de.prof_frame_part()
     for proce in update_components{
-        proce()
+        proce(delta_time)
     }
     for proce in late_update_components{
-        proce()
+        proce(delta_time)
     }
     
 }
