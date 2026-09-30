@@ -38,7 +38,7 @@ move_to_next_scene :: proc(){
 
 unload_current_scene :: proc(){
     entity.run_terminate_components()
-    
-    ge.remove_all_render_objects()
     ge.unload_all_materials()
+    ge.remove_all_render_objects()
+    
 }

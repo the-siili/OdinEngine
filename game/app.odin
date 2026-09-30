@@ -54,17 +54,19 @@ main :: proc() {
 
 test_scene :: proc(){
     models : []string = {
-        "res/model/anime_girl.obj",
-        "res/model/revolver.obj",
-        "res/model/ground.obj"
+        "res/model/ground.azub",
+        "res/model/Human.azub",
+        "res/model/rev.azub",
+        
     }
-    res.load_obj_models(models)
+    res.load_azub_models(models)
     textures :[]res.TextureInfo = {
         {"res/texture/pyramid.png",ge.TEXTURE_WRAP_MODE_REPEAT, ge.TEXTURE_FILTER_LINEAR},
         {"res/texture/pyramid_blue.png",ge.TEXTURE_WRAP_MODE_REPEAT, ge.TEXTURE_FILTER_LINEAR},
         {"res/texture/revolver_diffuse.png",ge.TEXTURE_WRAP_MODE_REPEAT, ge.TEXTURE_FILTER_LINEAR},
         {"res/texture/asphalt.png",ge.TEXTURE_WRAP_MODE_REPEAT, ge.TEXTURE_FILTER_LINEAR},
-        {"res/texture/bg.png",ge.TEXTURE_WRAP_MODE_CLAMP_TO_EDGE, ge.TEXTURE_FILTER_NEAREST}
+        {"res/texture/bg.png",ge.TEXTURE_WRAP_MODE_CLAMP_TO_EDGE, ge.TEXTURE_FILTER_NEAREST},
+        {"res/texture/tony.png",ge.TEXTURE_WRAP_MODE_CLAMP_TO_EDGE, ge.TEXTURE_FILTER_LINEAR}
     }
     res.load_textures(textures)
 
@@ -81,18 +83,18 @@ test_scene :: proc(){
     mat := new(ge.Material)
         mat.shader = shader
         mat.uniforms = {
-            "texture0"=ge.uniform(res.get_texture_id("pyramid_blue.png")),
+            "texture0"=ge.uniform(res.get_texture_id("tony.png")),
             "camera_loc"=ge.uniform(&ge.camera_location),
             "uv_scale"=ge.uniform(1.0)
         }
     matid := ge.load_material(mat)
-    for i in 0..<50{
+    for i in 0..<1{
         girl :d.Entity = entity.new_entity()
         trans.add(girl)
-        trans.setScale(girl, {0.3, 0.3, 0.3})
-        trans.setPosition(girl, {mrand.float32_range(-10, 10), 2.2, mrand.float32_range(-10, 10)})
-
-        static_mesh.add(girl, "anime_girl.obj", matid)
+        trans.setPosition(girl, {mrand.float32_range(-10, 10), 0, mrand.float32_range(-10, 10)})
+        scr := generate_enemy_script()
+        script.add(girl, scr)
+        static_mesh.add(girl, "Human.azub", matid)
 
     }
 
@@ -116,8 +118,7 @@ test_scene :: proc(){
 
     rev :d.Entity = entity.new_entity()
     trans.add(rev, cam)
-    trans.setPosition(rev, {0.2, -0.4, -0.9})
-    trans.setScale(rev, {0.5, 0.5, 0.5})
+    trans.setPosition(rev, {0.2, -0.2, -0.2})
 
 
     rmat := new(ge.Material)
@@ -127,7 +128,7 @@ test_scene :: proc(){
                     "uv_scale"=ge.uniform(1.0)}
     rmatid := ge.load_material(rmat)
 
-    static_mesh.add(rev, "revolver.obj", rmatid)
+    static_mesh.add(rev, "rev.azub", rmatid)
 
     ps_data.Rev = rev
 
@@ -140,7 +141,7 @@ test_scene :: proc(){
     ground :d.Entity = entity.new_entity()
     trans.add(ground)
     trans.setScale(ground, {1000, 1, 1000})
-    static_mesh.add(ground, "ground.obj", gmatid)
+    static_mesh.add(ground, "ground.azub", gmatid)
 
 }
 
@@ -190,24 +191,15 @@ player_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
         rotation,
         [3]f32{0, 0, -1},
     )
-    if w.keyboard["W"]{
-        trans.addPosition(entity, forward*player_data.speed*f32(delta_time))
-    }
-    
-    if w.keyboard["S"]{
-        trans.addPosition(entity, -forward*player_data.speed*f32(delta_time))
-    }
-    
-    if w.keyboard["A"]{
-        trans.addPosition(entity, -right*player_data.speed*f32(delta_time))
-    }
-    if w.keyboard["D"]{
-        trans.addPosition(entity, right*player_data.speed*f32(delta_time))
-    }
+    dir := w.get_input_vec3("D", "A", "SPACE", "L_SHIFT", "W", "S")
+
+    vel := forward*dir.z + right*dir.x + {0, dir.y, 0}
+    trans.addPosition(entity, vel*player_data.speed*f32(delta_time))
+
     if w.keyboard["DOWN"]{
         scene.load_scene("test")
     }
-
+    fmt.println(1/delta_time)
     trans.rotateAround(entity, {0, 1, 0},-f32(w.cursor_difference.x)/1000)
     trans.rotateAround(player_data.PlayerCamera, {1, 0, 0}, -f32(w.cursor_difference.y)/1000)
     // trans.rotateAround(player_data.Rev, {1, 0, 0}, 0.01)
@@ -219,4 +211,71 @@ player_fixed_update ::proc(entity:d.Entity, data:rawptr){
 
 }
 player_terminate ::proc(entity:d.Entity, data:rawptr){
+}
+
+
+
+enemyData :: struct{
+    next_point: [3]f32,
+    speed : f32
+}
+
+
+
+
+generate_enemy_script ::proc() -> ^script.Script{
+
+    enemyData := new(enemyData)
+    enemyData.next_point = {mrand.float32_range(-100, 100), 0, mrand.float32_range(-100, 100)}
+    enemyData.speed = 1
+    enemyBeh := new(script.Script)
+    enemyBeh.start=enemy_start
+    enemyBeh.update=enemy_update
+    enemyBeh.fixed_update=enemy_fixed_update
+    enemyBeh.terminate=enemy_terminate
+    enemyBeh.data=enemyData
+
+    return enemyBeh
+}
+
+
+enemy_start ::proc(entity:d.Entity, data:rawptr){
+
+    enemy_data := cast(^enemyData)data
+
+
+}
+
+enemy_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
+    fmt.println(trans.getGlobalRotationEuler(entity))
+    enemy_data := cast(^enemyData)data
+    pos := trans.getGlobalPosition(entity)
+    if mlin.distance(pos, enemy_data.next_point) < 2{
+        enemy_data.next_point = {pos.x+mrand.float32_range(-100, 100), 0, pos.z+mrand.float32_range(-100, 100)}
+    }
+
+
+    
+    dir : [3]f32 = {enemy_data.next_point.x-pos.x, 0, enemy_data.next_point.z - pos.z}
+    dir = mlin.vector_normalize(dir)
+    angle := m.atan2_f32(dir.z, dir.x)
+fmt.println(
+    "DIR: ", dir,
+    " ANGLE: ", angle,
+    " DEGREES: ", angle * 180.0 / m.PI
+)
+    trans.addPosition(entity, dir*enemy_data.speed*f32(delta_time))
+    trans.setRotationAround(entity, {0, 1, 0}, angle)
+
+    fmt.println(1/delta_time)
+
+    // trans.rotateAround(enemy_data.Rev, {1, 0, 0}, 0.01)
+    // trans.setScale(enemy_data.Rev, m.pow_f32(m.sin(trans.getRotationEuler(enemy_data.Rev).x), 2))
+}
+
+
+enemy_fixed_update ::proc(entity:d.Entity, data:rawptr){
+
+}
+enemy_terminate ::proc(entity:d.Entity, data:rawptr){
 }

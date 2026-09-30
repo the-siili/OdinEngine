@@ -31,7 +31,7 @@ update_perspective_matrix ::proc(window : glfw.WindowHandle){
     }
 }
 
-render_screen :: proc(window : glfw.WindowHandle) {
+render_screen :: proc(window : glfw.WindowHandle, time : f32) {
 
     de.prof_frame_part()
 
@@ -50,7 +50,7 @@ render_screen :: proc(window : glfw.WindowHandle) {
         gl.UseProgram(shaders[shader] )
         gl.UniformMatrix4fv(gl.GetUniformLocation(shaders[shader], "perspective_mat"), 1, gl.FALSE, perspective_ptr)
         gl.UniformMatrix4fv(gl.GetUniformLocation(shaders[shader], "view_mat"), 1, gl.FALSE, view_ptr)
-                
+        gl.Uniform1f(gl.GetUniformLocation(shaders[shader], "time"), time)
         for material, objects in material_list{
             bind_material_uniforms(shaders[shader], materials[material]) 
             for object_id in objects{

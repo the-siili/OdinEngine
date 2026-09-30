@@ -42,8 +42,6 @@ load_textures :: proc(texture_array: []TextureInfo){
             delete_key(&loaded_textures, name)
         }
     }
-    fmt.println(loaded_textures)
-    fmt.println(new_textures)
     delete_map(new_textures)
 }
 unload_textures :: proc(){

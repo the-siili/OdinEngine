@@ -94,6 +94,7 @@ update :: proc(delta_time : f64) {
 fixed_update :: proc() {
 }
 terminate :: proc() {
+    clear(&update_stack)
     for entity in transforms{
         delete_dynamic_array(transforms[entity].children)
         free(transforms[entity])
@@ -186,6 +187,11 @@ addRotation :: proc(entity : d.Entity, added_rotation : quaternion128){
 rotateAround :: proc(entity : d.Entity, axis:[3]f32, amount:f32){
     add_to_update_stack(entity)
     transforms[entity].local_rotation = transforms[entity].local_rotation * mlin.quaternion_angle_axis_f32(amount, axis)
+}
+
+setRotationAround :: proc(entity : d.Entity, axis:[3]f32, angle:f32){
+    add_to_update_stack(entity)
+    transforms[entity].local_rotation = mlin.quaternion_angle_axis_f32(angle, axis)
 }
 
 getGlobalScale :: proc(entity : d.Entity) -> [3]f32{

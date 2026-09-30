@@ -25,10 +25,9 @@ start :: proc() {
 update :: proc(delta_time : f64) {
     de.prof_frame_part()
     for entity in static_meshes{
-        ge.set_render_object_position(static_meshes[entity].render_object_id, transform.getGlobalPosition(entity))
-        rx, ry, rz := mlin.euler_angles_from_quaternion_f32(transform.getGlobalRotation(entity), mlin.Euler_Angle_Order.XYZ)
-        ge.set_render_object_rotation(static_meshes[entity].render_object_id, [3]f32{rx, ry, rz})
-        ge.set_render_object_scale(static_meshes[entity].render_object_id, transform.getGlobalScale(entity))
+        fmt.println("RIGHT BEFORE RENDERING: ", transform.getGlobalRotationEuler(entity))
+        ge.set_render_object_transform(static_meshes[entity].render_object_id, transform.getGlobalPosition(entity), transform.getGlobalRotationEuler(entity), transform.getGlobalScale(entity))
+
     }
 }
 fixed_update :: proc() {

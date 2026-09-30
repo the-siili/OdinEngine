@@ -19,7 +19,6 @@ CreatePlane :: proc(w : f32=1, d : f32=1) -> (o_vertices:[]f32, o_indices : []u3
         0,1,2,
         1,2,3
     }
-    fmt.println(vertices)
     return vertices[:], indices[:]
 
 }

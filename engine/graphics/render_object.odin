@@ -50,6 +50,7 @@ remove_all_render_objects :: proc(){
         free(render_objects[id])
         delete_key(&render_objects, id)
     }
+    clear(&render_object_hierarchy)
 }
 
 set_render_object_position:: proc(render_object_id : d.RenderObjectId, position : [3]f32){

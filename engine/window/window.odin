@@ -30,7 +30,7 @@ initialize_window :: proc(size : [2]i32) -> glfw.WindowHandle{
     assert(window != nil)
 
     glfw.MakeContextCurrent(window)
-    glfw.SwapInterval(1)
+    glfw.SwapInterval(0)
 
     // Load OpenGL 3.3 function pointers.
     gl.load_up_to(3,3, glfw.gl_set_proc_address)
@@ -75,6 +75,58 @@ reset_mouse_position :: proc(){
     previous_cursor_pos = cursor_pos
 }
 
+get_input_vec3 ::proc(x:string, xn:string,  y:string, yn:string, z:string, zn:string) -> [3]f32{
+    vec : [3]f32 = {0, 0, 0}
+    if keyboard[z]{
+        vec.z = 1
+        //trans.addPosition(entity, forward*player_data.speed*f32(delta_time))
+    }
+    
+    if keyboard[zn]{
+        vec.z = -1
+        //trans.addPosition(entity, -forward*player_data.speed*f32(delta_time))
+    }
+    
+    if keyboard[xn]{
+        vec.x = -1
+        //trans.addPosition(entity, -right*player_data.speed*f32(delta_time))
+    }
+    if keyboard[x]{
+        vec.x = 1
+        //trans.addPosition(entity, right*player_data.speed*f32(delta_time))
+    }
+    if keyboard[y]{
+        vec.y = 1
+        //trans.addPosition(entity, {0, 1, 0}*player_data.speed*f32(delta_time))
+    }
+    if keyboard[yn]{
+        vec.y = -1
+        //trans.addPosition(entity, -{0, 1, 0}*player_data.speed*f32(delta_time))
+    }
+    return vec
+}
+
+get_input_vec2 ::proc(x:string, xn:string,  y:string, yn:string) -> [2]f32{
+    vec : [2]f32 = {0, 0}
+    if keyboard[xn]{
+        vec.x = -1
+        //trans.addPosition(entity, -right*player_data.speed*f32(delta_time))
+    }
+    if keyboard[x]{
+        vec.x = 1
+        //trans.addPosition(entity, right*player_data.speed*f32(delta_time))
+    }
+    if keyboard[y]{
+        vec.y = 1
+        //trans.addPosition(entity, {0, 1, 0}*player_data.speed*f32(delta_time))
+    }
+    if keyboard[yn]{
+        vec.y = -1
+        //trans.addPosition(entity, -{0, 1, 0}*player_data.speed*f32(delta_time))
+    }
+    return vec
+}
+
 
 // Quit the window if the ESC key is pressed. This procedure is called by
 // glfw.SetKeyCallback.
@@ -82,53 +134,55 @@ callback_key :: proc "c" ( window : glfw.WindowHandle, key, scancode, action, mo
     if action == glfw.PRESS && key == glfw.KEY_ESCAPE {
         glfw.SetWindowShouldClose(window, true)
     }
-    else if action == glfw.PRESS && key == glfw.KEY_A {
-        keyboard["A"] = true
+    else if action == glfw.PRESS {
+        switch key{
+            case glfw.KEY_A:
+                keyboard["A"] = true
+            case glfw.KEY_D:
+                keyboard["D"] = true
+            case glfw.KEY_W:
+                keyboard["W"] = true
+            case glfw.KEY_S:
+                keyboard["S"] = true
+            case glfw.KEY_UP:
+                keyboard["UP"] = true
+            case glfw.KEY_DOWN:
+                keyboard["DOWN"] = true
+            case glfw.KEY_LEFT:
+                keyboard["LEFT"] = true
+            case glfw.KEY_RIGHT:
+                keyboard["RIGHT"] = true
+            case glfw.KEY_SPACE:
+                keyboard["SPACE"] = true
+            case glfw.KEY_LEFT_SHIFT:
+                keyboard["L_SHIFT"] = true
+
+        } 
     }
-    else if action == glfw.PRESS && key == glfw.KEY_D {
-        keyboard["D"] = true
-    }
-    else if action == glfw.PRESS && key == glfw.KEY_W {
-        keyboard["W"] = true
-    }
-    else if action == glfw.PRESS && key == glfw.KEY_S {
-        keyboard["S"] = true
-    }
-    else if action == glfw.RELEASE && key == glfw.KEY_A {
-        keyboard["A"] = false
-    }
-    else if action == glfw.RELEASE && key == glfw.KEY_D {
-        keyboard["D"] = false
-    }
-    else if action == glfw.RELEASE && key == glfw.KEY_W {
-        keyboard["W"] = false
-    }
-    else if action == glfw.RELEASE && key == glfw.KEY_S {
-        keyboard["S"] = false
-    }
-    else if action == glfw.RELEASE && key == glfw.KEY_LEFT {
-        keyboard["LEFT"] = false
-    }
-    else if action == glfw.RELEASE && key == glfw.KEY_RIGHT {
-        keyboard["RIGHT"] = false
-    }
-    else if action == glfw.PRESS && key == glfw.KEY_LEFT {
-        keyboard["LEFT"] = true
-    }
-    else if action == glfw.PRESS && key == glfw.KEY_RIGHT {
-        keyboard["RIGHT"] = true
-    }
-    else if action == glfw.RELEASE && key == glfw.KEY_DOWN {
-        keyboard["DOWN"] = false
-    }
-    else if action == glfw.RELEASE && key == glfw.KEY_UP {
-        keyboard["UP"] = false
-    }
-    else if action == glfw.PRESS && key == glfw.KEY_DOWN {
-        keyboard["DOWN"] = true
-    }
-    else if action == glfw.PRESS && key == glfw.KEY_UP {
-        keyboard["UP"] = true
+    else if action == glfw.RELEASE {
+        switch key{
+            case glfw.KEY_A:
+                keyboard["A"] = false
+            case glfw.KEY_D:
+                keyboard["D"] = false
+            case glfw.KEY_W:
+                keyboard["W"] = false
+            case glfw.KEY_S:
+                keyboard["S"] = false
+            case glfw.KEY_UP:
+                keyboard["UP"] = false
+            case glfw.KEY_DOWN:
+                keyboard["DOWN"] = false
+            case glfw.KEY_LEFT:
+                keyboard["LEFT"] = false
+            case glfw.KEY_RIGHT:
+                keyboard["RIGHT"] = false
+            case glfw.KEY_SPACE:
+                keyboard["SPACE"] = false
+            case glfw.KEY_LEFT_SHIFT:
+                keyboard["L_SHIFT"] = false
+
+        } 
     }
 
 

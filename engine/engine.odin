@@ -20,12 +20,13 @@ import entity "entity"
 
 CurrentWindow : glfw.WindowHandle
 
+start_tick : time.Tick
 delta_tick : time.Tick
 delta_time : f64
 
 launch :: proc(scene_name : string) {
 
-    
+    start_tick := time.tick_now()
     delta_tick := time.tick_now()
     
     CurrentWindow = w.initialize_window({1280, 800})
@@ -43,11 +44,10 @@ launch :: proc(scene_name : string) {
         delta_tick = time.tick_now()
         de.prof_frame()
        // de.print_unfreed_data(" before frame")
-       
         w.read_input()
         defer w.clear_input()
         entity.run_update_components(delta_time)
-        ge.render_screen(CurrentWindow)
+        ge.render_screen(CurrentWindow, f32(time.duration_seconds(time.tick_since(start_tick))))
         scene.move_to_next_scene()
         //de.print_unfreed_data(" after frame")
     }

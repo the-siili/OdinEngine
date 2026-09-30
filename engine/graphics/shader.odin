@@ -37,4 +37,5 @@ unload_shader ::proc(shader_id:d.ShaderId){
     shader := shaders[shader_id]
     gl.DeleteProgram(shader)
     delete_key(&shaders, shader_id)
+    delete_key(&render_object_hierarchy, shader_id)
 }

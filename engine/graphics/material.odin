@@ -46,16 +46,24 @@ load_material :: proc(material: ^Material) -> d.MaterialId{
 }
 
 unload_material :: proc(mat : d.MaterialId){
+    delete_dynamic_array(render_object_hierarchy[materials[mat].shader][mat])
+    delete_key(&render_object_hierarchy[materials[mat].shader], mat)
+    if len(render_object_hierarchy[materials[mat].shader]) <= 0{
+        delete_map(render_object_hierarchy[materials[mat].shader])
+        delete_key(&render_object_hierarchy, materials[mat].shader)
+    }
     material := materials[mat]
     delete_map(material.uniforms)
     free(material)
     delete_key(&materials, mat)
+
 }
 
 unload_all_materials :: proc(){
     for material in materials{
         unload_material(material)
     }
+    clear(&materials)
 }
 
 @private
@@ -73,6 +81,7 @@ bind_material_uniforms :: proc(shader : u32, material : ^Material){
                 gl.Uniform1i(material.uniforms[key].location, i32(tex_count))
                 gl.ActiveTexture(gl.TEXTURE0 + tex_count); 
                 gl.BindTexture(gl.TEXTURE_2D, textures[v]);
+                
                 tex_count += 1
             case f32:
                 name := strings.clone_to_cstring(key)
@@ -89,7 +98,6 @@ bind_material_uniforms :: proc(shader : u32, material : ^Material){
                 }
                 gl.Uniform2f(material.uniforms[key].location, v.x, v.y)
             case ^[3]f32:
-                fmt.println(v, " : ", v.x, " : ", v.y, " : ", v.z)
                 name := strings.clone_to_cstring(key)
                 defer delete_cstring(name)
                 if uniform.location == -999999999{
