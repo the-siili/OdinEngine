@@ -88,7 +88,7 @@ test_scene :: proc(){
             "uv_scale"=ge.uniform(1.0)
         }
     matid := ge.load_material(mat)
-    for i in 0..<1{
+    for i in 0..<50{
         girl :d.Entity = entity.new_entity()
         trans.add(girl)
         trans.setPosition(girl, {mrand.float32_range(-10, 10), 0, mrand.float32_range(-10, 10)})
@@ -247,7 +247,6 @@ enemy_start ::proc(entity:d.Entity, data:rawptr){
 }
 
 enemy_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
-    fmt.println(trans.getGlobalRotationEuler(entity))
     enemy_data := cast(^enemyData)data
     pos := trans.getGlobalPosition(entity)
     if mlin.distance(pos, enemy_data.next_point) < 2{
@@ -259,15 +258,9 @@ enemy_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
     dir : [3]f32 = {enemy_data.next_point.x-pos.x, 0, enemy_data.next_point.z - pos.z}
     dir = mlin.vector_normalize(dir)
     angle := m.atan2_f32(dir.z, dir.x)
-fmt.println(
-    "DIR: ", dir,
-    " ANGLE: ", angle,
-    " DEGREES: ", angle * 180.0 / m.PI
-)
-    trans.addPosition(entity, dir*enemy_data.speed*f32(delta_time))
-    trans.setRotationAround(entity, {0, 1, 0}, angle)
+    //trans.addPosition(entity, dir*enemy_data.speed*f32(delta_time))
+    //trans.setRotationAround(entity, {0, 1, 0}, angle)
 
-    fmt.println(1/delta_time)
 
     // trans.rotateAround(enemy_data.Rev, {1, 0, 0}, 0.01)
     // trans.setScale(enemy_data.Rev, m.pow_f32(m.sin(trans.getRotationEuler(enemy_data.Rev).x), 2))

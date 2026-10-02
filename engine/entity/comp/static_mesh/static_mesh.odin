@@ -25,7 +25,6 @@ start :: proc() {
 update :: proc(delta_time : f64) {
     de.prof_frame_part()
     for entity in static_meshes{
-        fmt.println("RIGHT BEFORE RENDERING: ", transform.getGlobalRotationEuler(entity))
         ge.set_render_object_transform(static_meshes[entity].render_object_id, transform.getGlobalPosition(entity), transform.getGlobalRotationEuler(entity), transform.getGlobalScale(entity))
 
     }
