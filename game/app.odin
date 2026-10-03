@@ -97,7 +97,7 @@ test_scene :: proc(){
         scr := generate_enemy_script()
         script.add(girl, scr)
         static_mesh.add(girl, "Human.azub", matid)
-        dybo.add(girl, pos, 1, 2, 1)
+        dybo.add(girl, pos+{0, 0.5, 0}, 1, 2, 1)
 
     }
 
@@ -229,14 +229,14 @@ player_fixed_update ::proc(entity:d.Entity, data:rawptr){
     
     dir := w.get_input_vec2("D", "A", "W", "S")
     dir = mlin.vector_normalize0(dir)
-    yvel = m.lerp(yvel, f64(-9.81), 0.01)
-    dybo.setVelocity(entity, (forward*dir.y*player_data.speed + right*dir.x*player_data.speed + {0, f32(yvel), 0}))
-    if yvel < -9{
+    
+    dybo.setVelocity(entity, (forward*dir.y*player_data.speed + right*dir.x*player_data.speed + {0, m.clamp(dybo.getVelocity(entity).y-9.81/60.0, -50, 50), 0}))
+    if dybo.getVelocity(entity).y < -9{
         jumped = false
     }
     if w.keyboard["SPACE"] && jumped == false{
         fmt.println("JUMP")
-        dybo.setVelocityY(entity, 100)
+        dybo.setVelocityY(entity, 20)
         jumped = true
     }
 }
@@ -257,7 +257,7 @@ generate_enemy_script ::proc() -> ^script.Script{
 
     enemyData := new(enemyData)
     enemyData.next_point = {mrand.float32_range(-100, 100), 0, mrand.float32_range(-100, 100)}
-    enemyData.speed = 1
+    enemyData.speed = 10
     enemyBeh := new(script.Script)
     enemyBeh.start=enemy_start
     enemyBeh.update=enemy_update
@@ -276,7 +276,7 @@ enemy_start ::proc(entity:d.Entity, data:rawptr){
 
 }
 
-enemy_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
+enemy_fixed_update ::proc(entity:d.Entity, data:rawptr){
     enemy_data := cast(^enemyData)data
     pos := trans.getGlobalPosition(entity)
     if mlin.distance(pos, enemy_data.next_point) < 2{
@@ -285,9 +285,10 @@ enemy_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
 
 
     
-    dir : [3]f32 = {enemy_data.next_point.x-pos.x, 0, enemy_data.next_point.z - pos.z}
-    dir = mlin.vector_normalize(dir)
-    angle := m.atan2_f32(dir.z, dir.x)
+    // dir : [3]f32 = {enemy_data.next_point.x-pos.x, 0, enemy_data.next_point.z - pos.z}
+    // dir = mlin.vector_normalize(dir)
+    // dybo.setVelocity(entity, (dir.y*enemy_data.speed + dir.x*enemy_data.speed))
+    // angle := m.atan2_f32(dir.z, dir.x)
     //trans.addPosition(entity, dir*enemy_data.speed*f32(delta_time))
     //trans.setRotationAround(entity, {0, 1, 0}, angle)
 
@@ -297,7 +298,7 @@ enemy_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
 }
 
 
-enemy_fixed_update ::proc(entity:d.Entity, data:rawptr){
+enemy_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
 
 }
 enemy_terminate ::proc(entity:d.Entity, data:rawptr){

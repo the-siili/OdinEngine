@@ -62,6 +62,14 @@ add :: proc(entity : d.Entity, pos : [3]f32, w : f32, h:f32, d:f32) {
 setVelocity :: proc(entity : d.Entity, new_velocity : [3]f32){
     dynamic_bodies[entity].velocity = new_velocity
 }
+getVelocity :: proc(entity : d.Entity) -> [3]f32{
+    return dynamic_bodies[entity].velocity
+}
+
 setVelocityY :: proc(entity : d.Entity, new_velocity : f32){
     dynamic_bodies[entity].velocity.y = new_velocity
+}
+
+addVelocityY :: proc(entity : d.Entity, added_velocity : f32){
+    dynamic_bodies[entity].velocity.y += added_velocity
 }

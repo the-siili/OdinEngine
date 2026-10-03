@@ -43,6 +43,7 @@ render_screen :: proc(window : glfw.WindowHandle, time : f32) {
     gl.ClearColor(0.0, 0.0, 0.0, 1)
     gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     render_background(perspective_ptr, view_ptr)
+
     for shader, material_list in render_object_hierarchy{
         gl.UseProgram(shaders[shader] )
         gl.UniformMatrix4fv(gl.GetUniformLocation(shaders[shader], "perspective_mat"), 1, gl.FALSE, perspective_ptr)
