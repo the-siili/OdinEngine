@@ -18,12 +18,16 @@ import de "debugger"
 import scene "scene"
 import entity "entity"
 import "physics"
+import d "definition"
 CurrentWindow : glfw.WindowHandle
 
 start_tick : time.Tick
 delta_tick : time.Tick
 delta_time : f64
 fixed_delta_time : f64
+
+
+
 launch :: proc(scene_name : string) {
 
     start_tick := time.tick_now()
@@ -49,7 +53,7 @@ launch :: proc(scene_name : string) {
         defer w.clear_input()
         entity.run_update_components(delta_time)
 
-        if fixed_delta_time > 1.0/60.0{
+        if fixed_delta_time > d.FIXED_UPDATE_INTERVAL{
             entity.run_fixed_update_components()
             physics.tick()
             fixed_delta_time = 0

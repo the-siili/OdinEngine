@@ -54,6 +54,7 @@ add :: proc(entity : d.Entity, pos : [3]f32, w : f32, h:f32, d:f32) {
     body.position = pos
     body.velocity = {0, 0, 0}
     body.drag = 0
+    body.is_on_floor = false
     phy.add_physics_body(entity, body)
     dynamic_bodies[entity] = body
 }
@@ -72,4 +73,8 @@ setVelocityY :: proc(entity : d.Entity, new_velocity : f32){
 
 addVelocityY :: proc(entity : d.Entity, added_velocity : f32){
     dynamic_bodies[entity].velocity.y += added_velocity
+}
+
+isOnFloor :: proc(entity: d.Entity) -> bool{
+    return dynamic_bodies[entity].is_on_floor
 }

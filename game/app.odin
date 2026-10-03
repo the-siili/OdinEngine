@@ -195,7 +195,7 @@ player_start ::proc(entity:d.Entity, data:rawptr){
 jumped := false
 yvel :f64= 0.0
 player_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
-    fmt.println(dybo.dynamic_bodies[entity].velocity)
+    //fmt.println(dybo.dynamic_bodies[entity].velocity)
     player_data := cast(^PlayerData)data
 
 
@@ -205,7 +205,7 @@ player_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
     }
 
 
-    //fmt.println(1/delta_time)
+    fmt.println("DELTA Ms: ", delta_time)
     trans.rotateAround(entity, {0, 1, 0},-f32(w.cursor_difference.x)/1000)
     trans.rotateAround(player_data.PlayerCamera, {1, 0, 0}, -f32(w.cursor_difference.y)/1000)
     // trans.rotateAround(player_data.Rev, {1, 0, 0}, 0.01)
@@ -230,11 +230,11 @@ player_fixed_update ::proc(entity:d.Entity, data:rawptr){
     dir := w.get_input_vec2("D", "A", "W", "S")
     dir = mlin.vector_normalize0(dir)
     
-    dybo.setVelocity(entity, (forward*dir.y*player_data.speed + right*dir.x*player_data.speed + {0, m.clamp(dybo.getVelocity(entity).y-9.81/60.0, -50, 50), 0}))
+    dybo.setVelocity(entity, (forward*dir.y*player_data.speed + right*dir.x*player_data.speed + {0, m.clamp(dybo.getVelocity(entity).y-9.81*d.FIXED_UPDATE_INTERVAL, -50, 50), 0}))
     if dybo.getVelocity(entity).y < -9{
         jumped = false
     }
-    if w.keyboard["SPACE"] && jumped == false{
+    if w.keyboard["SPACE"] && dybo.isOnFloor(entity){
         fmt.println("JUMP")
         dybo.setVelocityY(entity, 20)
         jumped = true

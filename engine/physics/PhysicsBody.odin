@@ -6,7 +6,8 @@ PhysicsBody :: struct{
     position :[3]f32,
     velocity : [3]f32,
     drag : f32,
-    collider : ^Collider
+    collider : ^Collider,
+    is_on_floor : bool
 }
 
 setVelocity :: proc(entity : d.Entity, new_velocity : [3]f32){
