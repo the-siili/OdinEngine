@@ -32,15 +32,12 @@ update_perspective_matrix ::proc(window : glfw.WindowHandle){
 }
 
 render_screen :: proc(window : glfw.WindowHandle, time : f32) {
-
     de.prof_frame_part()
 
     view_mat := make_view_matrix(camera_location, camera_rotation)
 
     perspective_ptr : [^] f32 = &perspective_mat[0]
     view_ptr : [^] f32 = &view_mat[0]
-
-
 
     // Draw commands.
     gl.ClearColor(0.0, 0.0, 0.0, 1)

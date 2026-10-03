@@ -57,7 +57,6 @@ update :: proc(delta_time : f64) {
         }
     }
     clear(&update_stack)
-  
     for entity in stack{
 
         if transforms[entity].parent != -1{

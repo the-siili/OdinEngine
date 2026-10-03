@@ -41,7 +41,7 @@ void main() {
         float dist = clamp(sqrt(pow(pos.x-light_source.x, 2)+pow(pos.y-light_source.y, 2)+pow(pos.z-light_source.z, 2)), lighting_close, lighting_far);
         dist = 1-(dist - lighting_close) / (lighting_far - lighting_close);
         vec4 col = texture(texture0, uv*uv_scale);
-        FragColor = vec4(col.xyz*dist*light_color*light_intensity, 1.0);
+        FragColor = vec4(col.xyz, 1.0);
 
         //FragColor = vec4(0, sin(uv.x), 0,  1.0);
 

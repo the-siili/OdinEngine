@@ -17,13 +17,13 @@ import "core:mem"
 import de "debugger"
 import scene "scene"
 import entity "entity"
-
+import "physics"
 CurrentWindow : glfw.WindowHandle
 
 start_tick : time.Tick
 delta_tick : time.Tick
 delta_time : f64
-
+fixed_delta_time : f64
 launch :: proc(scene_name : string) {
 
     start_tick := time.tick_now()
@@ -41,12 +41,19 @@ launch :: proc(scene_name : string) {
 
     for !glfw.WindowShouldClose(CurrentWindow) {
         delta_time = time.duration_milliseconds(time.tick_since(delta_tick))/1000.0
+        fixed_delta_time += delta_time
         delta_tick = time.tick_now()
         de.prof_frame()
        // de.print_unfreed_data(" before frame")
         w.read_input()
         defer w.clear_input()
         entity.run_update_components(delta_time)
+
+        if fixed_delta_time > 1.0/60.0{
+            entity.run_fixed_update_components()
+            physics.tick()
+            fixed_delta_time = 0
+        }
         ge.render_screen(CurrentWindow, f32(time.duration_seconds(time.tick_since(start_tick))))
         scene.move_to_next_scene()
         //de.print_unfreed_data(" after frame")

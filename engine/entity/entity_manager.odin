@@ -3,6 +3,7 @@ import transform "comp/transform"
 import static_mesh "comp/static_mesh"
 import script "comp/script"
 import camera "comp/camera"
+import "comp/dynamicbody"
 import d "../definition"
 import de "../debugger"
 next_entity_id : d.Entity = 0
@@ -37,6 +38,8 @@ initialize_components ::proc(){
     append(&late_update_components, camera.late_update)
     append(&fixed_update_components, camera.fixed_update)
     append(&terminate_components, camera.terminate)
+
+    append(&fixed_update_components, dynamicbody.fixed_update)
 
 }
 

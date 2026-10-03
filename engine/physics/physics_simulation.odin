@@ -1,7 +1,8 @@
 package physics
 import d "../definition"
-
-physics_bodies : map[d.Entity]PhysicsBody
+import mlin "core:math/linalg"
+import "core:fmt"
+physics_bodies : map[d.Entity]^PhysicsBody
 
 tick_rate := 60
 
@@ -14,22 +15,35 @@ end :: proc(){
 }
 
 tick :: proc(){
-
-    for entity, &body in physics_bodies{
-        newPos := body.position+(body.velocity/60.0)
+    //fmt.println(physics_bodies)
+    for entity, body in physics_bodies{
+        //fmt.println(entity)
+        vel := (body.velocity/60.0)
+        newPos := body.position+vel
         for entity2, body2 in physics_bodies{
-            if entity == entity2{
+            if body == body2{
                 continue
             }
-            if isOverlapping(body.collider,newPos, body2.collider,body2.position){
-                return
+            isColliding, collision_normal, penetration := isOverlapping(body.collider,newPos, body2.collider,body2.position)
+            if isColliding{
+
+                // fmt.println(entity, " COLLIDED WITH ", entity2)
+                // fmt.println("COLLISION NORMAL ", collision_normal)
+                // fmt.println("COLLISION PEN ", penetration)
+                vel = vel - (mlin.vector_dot(vel, collision_normal) * collision_normal)
+                newNewPos := body.position + vel
+                collide_again, newnorm, newpen := isOverlapping(body.collider,newNewPos, body2.collider,body2.position)
+                if collide_again{
+                    //QUESTIONABLE MAYBE FIUX LATER
+                    vel = vel - (mlin.vector_dot(vel, newnorm) * newnorm)
+                }
             }
         }
-
-        body.position = newPos
+        body.position += vel
+    
     }
 }
 
-add_physics_body :: proc(entity : d.Entity, body : PhysicsBody){
+add_physics_body :: proc(entity : d.Entity, body : ^PhysicsBody){
     physics_bodies[entity] = body
 }

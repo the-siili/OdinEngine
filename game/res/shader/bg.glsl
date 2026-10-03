@@ -32,7 +32,7 @@ void main() {
         float dark = 1; //clamp((1+sin(time))/2.0, 0.2, 1.0);
         vec4 col = texture(texture0, uv);
         FragColor = vec4(col.xyz*dark, 1.0);
-        FragColor = vec4(uv.x, uv.y, 0.0, 1.0);
+        //FragColor = vec4(uv.x, uv.y, 0.0, 1.0);
         //FragColor = vec4(0, sin(uv.x), 0,  1.0);
 
 }

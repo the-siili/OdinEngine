@@ -38,6 +38,7 @@ import script "../engine/entity/comp/script"
 import camera "../engine/entity/comp/camera"
 import res "../engine/resource"
 import de "../engine/debugger"
+import dybo "../engine/entity/comp/dynamicbody"
 CurrentWindow : glfw.WindowHandle
 
 main :: proc() {
@@ -88,23 +89,35 @@ test_scene :: proc(){
             "uv_scale"=ge.uniform(1.0)
         }
     matid := ge.load_material(mat)
-    for i in 0..<50{
+    for i in 0..<100{
         girl :d.Entity = entity.new_entity()
         trans.add(girl)
-        trans.setPosition(girl, {mrand.float32_range(-10, 10), 0, mrand.float32_range(-10, 10)})
+        pos :[3]f32 = {mrand.float32_range(-100, 100), 0, mrand.float32_range(-100, 100)}
+        trans.setPosition(girl, pos)
         scr := generate_enemy_script()
         script.add(girl, scr)
         static_mesh.add(girl, "Human.azub", matid)
+        dybo.add(girl, pos, 1, 2, 1)
 
     }
 
-
+    wall1 :d.Entity = entity.new_entity()
+    trans.add(wall1)
+    trans.setPosition(wall1, {0, 0, -5})
+    static_mesh.add(wall1, "ground.azub", matid)
+    dybo.add(wall1, {0, 0, -5}, 4, 2, 1)
+    wall2 :d.Entity = entity.new_entity()
+    trans.add(wall2)
+    trans.setPosition(wall2, {2, 0, -5})
+    static_mesh.add(wall2, "ground.azub", matid)
+    dybo.add(wall2, {2, 0, -5}, 1, 2, 5)
 
     player :d.Entity = entity.new_entity()
     trans.add(player )
     
-    trans.setPosition(player, {0, 0.0, 0})
+    trans.setPosition(player, {0, 2, 0})
     fmt.println("BRUUUUHH")
+    dybo.add(player, {0, 2, 0}, 1, 1.7, 1)
     playerScript := generate_player_script()
     
     script.add(player, playerScript)
@@ -112,7 +125,7 @@ test_scene :: proc(){
     cam : d.Entity = entity.new_entity()
     trans.add(cam, player)
     camera.add(cam)
-    trans.setPosition(cam, {0, 1.7, 0})
+    trans.setPosition(cam, {0, 1.7/2.0, 0})
     ps_data := cast(^PlayerData)playerScript.data
     ps_data.PlayerCamera = cam
 
@@ -142,6 +155,7 @@ test_scene :: proc(){
     trans.add(ground)
     trans.setScale(ground, {1000, 1, 1000})
     static_mesh.add(ground, "ground.azub", gmatid)
+    dybo.add(ground, {0, -0.5, 0}, 100, 1, 1000)
 
 }
 
@@ -159,7 +173,7 @@ generate_player_script ::proc() -> ^script.Script{
     playerData := new(PlayerData)
 
     playerData.PlayerCamera=-1
-    playerData.speed = 10
+    playerData.speed = 5
     playerBeh := new(script.Script)
     playerBeh.start=player_start
     playerBeh.update=player_update
@@ -178,7 +192,28 @@ player_start ::proc(entity:d.Entity, data:rawptr){
 
 }
 
+jumped := false
+yvel :f64= 0.0
 player_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
+    fmt.println(dybo.dynamic_bodies[entity].velocity)
+    player_data := cast(^PlayerData)data
+
+
+
+    if w.keyboard["DOWN"]{
+        scene.load_scene("test")
+    }
+
+
+    //fmt.println(1/delta_time)
+    trans.rotateAround(entity, {0, 1, 0},-f32(w.cursor_difference.x)/1000)
+    trans.rotateAround(player_data.PlayerCamera, {1, 0, 0}, -f32(w.cursor_difference.y)/1000)
+    // trans.rotateAround(player_data.Rev, {1, 0, 0}, 0.01)
+    // trans.setScale(player_data.Rev, m.pow_f32(m.sin(trans.getRotationEuler(player_data.Rev).x), 2))
+}
+
+
+player_fixed_update ::proc(entity:d.Entity, data:rawptr){
     player_data := cast(^PlayerData)data
     rotation := trans.getRotation(entity)
     
@@ -191,24 +226,19 @@ player_update ::proc(entity:d.Entity, data:rawptr, delta_time : f64){
         rotation,
         [3]f32{0, 0, -1},
     )
-    dir := w.get_input_vec3("D", "A", "SPACE", "L_SHIFT", "W", "S")
-
-    vel := forward*dir.z + right*dir.x + {0, dir.y, 0}
-    trans.addPosition(entity, vel*player_data.speed*f32(delta_time))
-
-    if w.keyboard["DOWN"]{
-        scene.load_scene("test")
+    
+    dir := w.get_input_vec2("D", "A", "W", "S")
+    dir = mlin.vector_normalize0(dir)
+    yvel = m.lerp(yvel, f64(-9.81), 0.01)
+    dybo.setVelocity(entity, (forward*dir.y*player_data.speed + right*dir.x*player_data.speed + {0, f32(yvel), 0}))
+    if yvel < -9{
+        jumped = false
     }
-    fmt.println(1/delta_time)
-    trans.rotateAround(entity, {0, 1, 0},-f32(w.cursor_difference.x)/1000)
-    trans.rotateAround(player_data.PlayerCamera, {1, 0, 0}, -f32(w.cursor_difference.y)/1000)
-    // trans.rotateAround(player_data.Rev, {1, 0, 0}, 0.01)
-    // trans.setScale(player_data.Rev, m.pow_f32(m.sin(trans.getRotationEuler(player_data.Rev).x), 2))
-}
-
-
-player_fixed_update ::proc(entity:d.Entity, data:rawptr){
-
+    if w.keyboard["SPACE"] && jumped == false{
+        fmt.println("JUMP")
+        dybo.setVelocityY(entity, 100)
+        jumped = true
+    }
 }
 player_terminate ::proc(entity:d.Entity, data:rawptr){
 }
