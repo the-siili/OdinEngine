@@ -155,7 +155,7 @@ test_scene :: proc(){
     trans.add(ground)
     trans.setScale(ground, {1000, 1, 1000})
     static_mesh.add(ground, "ground.azub", gmatid)
-    dybo.add(ground, {0, -0.5, 0}, 100, 1, 1000)
+    dybo.add(ground, {0, -2.5, 0}, 100, 5, 1000)
 
 }
 
@@ -229,11 +229,9 @@ player_fixed_update ::proc(entity:d.Entity, data:rawptr){
     
     dir := w.get_input_vec2("D", "A", "W", "S")
     dir = mlin.vector_normalize0(dir)
-    
-    dybo.setVelocity(entity, (forward*dir.y*player_data.speed + right*dir.x*player_data.speed + {0, m.clamp(dybo.getVelocity(entity).y-9.81*d.FIXED_UPDATE_INTERVAL, -50, 50), 0}))
-    if dybo.getVelocity(entity).y < -9{
-        jumped = false
-    }
+    newVel := (forward*dir.y*player_data.speed + right*dir.x*player_data.speed * {1, 0, 1})
+    //lerpVel := mlin.lerp(dybo.getVelocity(entity).xz, newVel, 0.1)
+    dybo.setVelocity(entity, newVel+ {0, m.clamp(dybo.getVelocity(entity).y-9.81*d.FIXED_UPDATE_INTERVAL, -50, 50), 0})
     if w.keyboard["SPACE"] && dybo.isOnFloor(entity){
         fmt.println("JUMP")
         dybo.setVelocityY(entity, 20)

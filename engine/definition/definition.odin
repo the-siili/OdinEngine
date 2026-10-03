@@ -8,4 +8,4 @@ TextureId :: i32
 MaterialId :: i32
 
 
-FIXED_UPDATE_INTERVAL :: 1.0/120.0
+FIXED_UPDATE_INTERVAL :: 1.0/60.0
